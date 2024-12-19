@@ -6,12 +6,17 @@ import { parse } from 'papaparse';
 import { UploadService } from './upload/upload.service';
 import { FileDataSerializer } from './serializers/file-data.serializer';
 import { DatabaseService } from './database/database.service';
+import { DataSource } from 'typeorm';
+import { RegisterTransactionDto } from './dtos/register-transaction.dto';
+import { TransactionStatusEnum } from './database/enums/transaction-status.enum';
+import { TransactionInvalidMotiveEnum } from './database/enums/transaction-invalid-motive.enum';
 
 @Injectable()
 export class AppService {
   private transactions: Array<TransactionDto> = [];
 
   constructor(
+    private dataSource: DataSource,
     private readonly uploadService: UploadService,
     private readonly databaseService: DatabaseService,
   ) {}
@@ -21,9 +26,15 @@ export class AppService {
     const fileData: FileDataSerializer = this.uploadService.uploadFile(file);
 
     // save metadata to database
-    await this.registerFileMetada(fileData.folder, fileData.name);
+    const uploadId = await this.registerFileMetada(
+      fileData.folder,
+      fileData.name,
+    );
 
     const data = await this.convertFileToJSON(fileData.path);
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.startTransaction();
 
     // insert the first value
     this.transactions.push(data.shift());
@@ -32,10 +43,44 @@ export class AppService {
       const duplicated = this.hasEqualTransaction(transaction);
 
       if (duplicated) {
+        this.registerTransaction({
+          queryRunner,
+          transaction: {
+            ...transaction,
+            status: TransactionStatusEnum.INVALID,
+            invalidMotive: TransactionInvalidMotiveEnum.DUPLICATED,
+          },
+          uploadId,
+        });
       } else {
-        this.insertTransaction(transaction);
+        if (transaction.amount < 0) {
+          this.registerTransaction({
+            queryRunner,
+            transaction: {
+              ...transaction,
+              status: TransactionStatusEnum.INVALID,
+              invalidMotive: TransactionInvalidMotiveEnum.NEGATIVE,
+            },
+            uploadId,
+          });
+        } else {
+          this.registerTransaction({
+            queryRunner,
+            transaction: {
+              ...transaction,
+              status: TransactionStatusEnum.VALID,
+            },
+            uploadId,
+          });
+
+          // add to list
+          this.insertTransaction(transaction);
+        }
       }
     });
+
+    // only commit if all csv lines are processed
+    await queryRunner.commitTransaction();
 
     return null;
   }
@@ -102,5 +147,9 @@ export class AppService {
     filename: string,
   ): Promise<number> {
     return await this.databaseService.registerFile(baseDir, filename);
+  }
+
+  private async registerTransaction(data: RegisterTransactionDto) {
+    return await this.databaseService.registerTransaction(data);
   }
 }

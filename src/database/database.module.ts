@@ -3,6 +3,7 @@ import { DatabaseService } from './database.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { entities } from './entities';
 import { UploadRepositoryModule } from './repositories/uploads/upload-repository.module';
+import { TransactionRepositoryModule } from './repositories/transactions/transaction-repository.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { UploadRepositoryModule } from './repositories/uploads/upload-repository
       synchronize: true,
     }),
     UploadRepositoryModule,
+    TransactionRepositoryModule,
   ],
   providers: [DatabaseService],
   exports: [DatabaseService],
