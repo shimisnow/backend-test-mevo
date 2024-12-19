@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { AppService } from './app.service';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { UploadFileSerializer } from './serializers/upload-file.serializer';
 
 @Controller()
 export class AppController {
@@ -22,7 +23,7 @@ export class AppController {
       }),
     )
     file: Express.Multer.File,
-  ) {
-    console.log(file);
+  ): UploadFileSerializer {
+    return this.appService.processCSV(file);
   }
 }
