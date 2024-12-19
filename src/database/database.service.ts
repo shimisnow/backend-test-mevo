@@ -14,6 +14,10 @@ export class DatabaseService {
     return await this.uploadRepository.registerUpload(baseDir, filename);
   }
 
+  async updateFile(uploadId: number) {
+    return await this.uploadRepository.updateFile(uploadId);
+  }
+
   async registerTransaction(data: RegisterTransactionDto) {
     return await this.transactionRepository.registerTransaction(data);
   }

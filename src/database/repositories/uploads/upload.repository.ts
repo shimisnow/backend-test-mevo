@@ -20,4 +20,15 @@ export class UploadRepository {
 
     return result.id;
   }
+
+  async updateFile(uploadId: number) {
+    await this.uploadRepository.update(
+      {
+        id: uploadId,
+      },
+      {
+        status: UploadStatusEnum.PROCESSED,
+      },
+    );
+  }
 }

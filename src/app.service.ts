@@ -108,6 +108,8 @@ export class AppService {
     response.operations.total =
       response.operations.invalid + response.operations.valid;
 
+    await this.databaseService.updateFile(uploadId);
+
     return response;
   }
 
