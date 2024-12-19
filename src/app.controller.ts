@@ -16,14 +16,14 @@ export class AppController {
 
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
-  uploadFile(
+  async uploadFile(
     @UploadedFile(
       new ParseFilePipe({
         validators: [new FileTypeValidator({ fileType: 'text/csv' })],
       }),
     )
     file: Express.Multer.File,
-  ): UploadFileSerializer {
-    return this.appService.processCSV(file);
+  ): Promise<UploadFileSerializer> {
+    return await this.appService.processFile(file);
   }
 }

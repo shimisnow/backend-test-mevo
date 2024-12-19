@@ -1,16 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { UploadFileSerializer } from './serializers/upload-file.serializer';
-import * as csv from 'csvtojson';
 
-export class Transaction {
-  to: number;
-  from: number;
-  amount: number;
-}
+import { TransactionDto } from './dtos/transaction.dto';
+import { readFileSync } from 'fs';
+import { parse } from 'papaparse';
 
 @Injectable()
 export class AppService {
-  private transactions: Array<Transaction> = [
+  private transactions: Array<TransactionDto> = [
     {
       to: 12,
       from: 1,
@@ -28,22 +25,25 @@ export class AppService {
     },
   ];
 
-  processCSV(file: Express.Multer.File): UploadFileSerializer {
-    csv({ delimiter: ';' })
-      .fromFile(file.path)
-      .then((jsonObj) => {
-        console.log(jsonObj);
-        /**
-         * [
-         * 	{a:"1", b:"2", c:"3"},
-         * 	{a:"4", b:"5". c:"6"}
-         * ]
-         */
-      });
-
-    return null;
-
+  async processFile(file: Express.Multer.File): Promise<UploadFileSerializer> {
+    const data = await this.convertFileToJSON(file);
+    console.log(data);
     // +50k suspect
+    return null;
+  }
+
+  async convertFileToJSON(
+    file: Express.Multer.File,
+  ): Promise<Array<TransactionDto>> {
+    const fileBuffer = readFileSync(file.path);
+    const data = fileBuffer.toString('utf16le');
+
+    const finalCSV = await parse(data, {
+      header: true,
+      skipEmptyLines: true,
+    });
+
+    return finalCSV.data;
   }
 
   private validate() {
