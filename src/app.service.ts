@@ -1,41 +1,37 @@
 import { Injectable } from '@nestjs/common';
 import { UploadFileSerializer } from './serializers/upload-file.serializer';
-
 import { TransactionDto } from './dtos/transaction.dto';
 import { readFileSync } from 'fs';
 import { parse } from 'papaparse';
+import { UploadService } from './upload/upload.service';
+import { FileDataSerializer } from './serializers/file-data.serializer';
 
 @Injectable()
 export class AppService {
-  private transactions: Array<TransactionDto> = [
-    {
-      to: 12,
-      from: 1,
-      amount: 5,
-    },
-    {
-      to: 15,
-      from: 1,
-      amount: 5,
-    },
-    {
-      to: 12,
-      from: 1,
-      amount: 5,
-    },
-  ];
+  private transactions: Array<TransactionDto> = [];
+
+  constructor(private readonly uploadService: UploadService) {}
 
   async processFile(file: Express.Multer.File): Promise<UploadFileSerializer> {
-    const data = await this.convertFileToJSON(file);
-    console.log(data);
-    // +50k suspect
+    const fileData: FileDataSerializer = this.uploadService.uploadFile(file);
+
+    const data = await this.convertFileToJSON(fileData.path);
+
+    // insert the first value
+    this.transactions.push(data.shift());
+
+    data.forEach((transaction) => {
+      // TODO verify if transaction is duplicated
+      this.insertTransaction(transaction);
+    });
+
     return null;
   }
 
-  async convertFileToJSON(
-    file: Express.Multer.File,
+  private async convertFileToJSON(
+    path: string,
   ): Promise<Array<TransactionDto>> {
-    const fileBuffer = readFileSync(file.path);
+    const fileBuffer = readFileSync(path);
     const data = fileBuffer.toString('utf16le');
 
     const finalCSV = await parse(data, {
@@ -51,8 +47,19 @@ export class AppService {
     // no equal transaction
   }
 
-  private insertTransaction() {
-    // sorted insert
+  private insertTransaction(transaction: TransactionDto) {
+    let i = 0;
+    // search the position to insert the transaction
+    for (i = 0; i < this.transactions.length; i++) {
+      if (transaction.from > this.transactions[i].from) {
+        this.transactions.splice(i, 0, transaction);
+        i = this.transactions.length + 1;
+      }
+    }
+    // if the entire array was processed, transactions needs to be inserted at the end
+    if (i == this.transactions.length) {
+      this.transactions.push(transaction);
+    }
   }
 
   private searchEqualTransaction() {

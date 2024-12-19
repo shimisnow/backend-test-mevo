@@ -2,15 +2,10 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
-import { MulterModule } from '@nestjs/platform-express';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
-  imports: [
-    DatabaseModule,
-    MulterModule.register({
-      dest: process.env.UPLOADS_TEMP_DIR,
-    }),
-  ],
+  imports: [UploadModule, DatabaseModule],
   controllers: [AppController],
   providers: [AppService],
 })
