@@ -1,6 +1,13 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { TransactionStatusEnum } from '../enums/transaction-status.enum';
 import { TransactionInvalidMotiveEnum } from '../enums/transaction-invalid-motive.enum';
+import { UploadEntity } from './upload.entity';
 
 @Entity({
   name: 'transactions',
@@ -56,4 +63,12 @@ export class TransactionEntity {
     nullable: true,
   })
   warning?: boolean;
+
+  @ManyToOne(() => UploadEntity, (upload) => upload.id)
+  @JoinColumn({
+    name: 'upload_id',
+    referencedColumnName: 'id',
+    foreignKeyConstraintName: 'fk_transactions_uploads',
+  })
+  upload: UploadEntity;
 }
