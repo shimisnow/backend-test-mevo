@@ -1,3 +1,16 @@
+## Considerações
+
+- Em um cenário real eu implementaria o endpoint para apenas fazer o upload do arquivo e retornar um identificador para acompanhamento.
+- Após o upload, adicionaria o arquivo em uma fila para processamento posterior (assincrono).
+- Durante o upload, ou o arquivo teria limitação de tamanho (que seria calculado por uma determinada quantidade de linhas) ou o processamento após a fila teria que ser feito em partes (a cada x linhas) e cada bloco processado procuraria transações duplicadas em seu próprio bloco e no bloco anterior.
+- Na implementação atual cada upload tem um id no banco de dados e todas as transações referenciam tal id. Implementado para verificação, se necessário, da origem da transação, uma vez que todos os arquivos processados são armazenados.
+- Na implementação atual, todas as transações são inseridas no banco, mas sofrem commit apenas se o arquivo for completamente processado.
+
+## Observações
+
+- Não deu tempo de implementar um OpenAPI/Swagger ou Compodoc
+- Não deu tempo de fazer teste unitário
+
 ## Algoritmo implementado
 
 ```mermaid
