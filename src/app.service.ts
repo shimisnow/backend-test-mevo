@@ -10,6 +10,7 @@ import { DataSource } from 'typeorm';
 import { RegisterTransactionDto } from './dtos/register-transaction.dto';
 import { TransactionStatusEnum } from './database/enums/transaction-status.enum';
 import { TransactionInvalidMotiveEnum } from './database/enums/transaction-invalid-motive.enum';
+import { InvalidOperationMotiveEnum } from './enums/invalid-operation-motive.enum';
 
 @Injectable()
 export class AppService {
@@ -22,6 +23,15 @@ export class AppService {
   ) {}
 
   async processFile(file: Express.Multer.File): Promise<UploadFileSerializer> {
+    const response: UploadFileSerializer = {
+      operations: {
+        total: 0,
+        valid: 0,
+        invalid: 0,
+      },
+      invalidOperations: [],
+    };
+
     // uploads the file
     const fileData: FileDataSerializer = this.uploadService.uploadFile(file);
 
@@ -37,7 +47,7 @@ export class AppService {
     await queryRunner.startTransaction();
 
     // insert the first value
-    this.transactions.push(data.shift());
+    // this.transactions.push(data.shift());
 
     data.forEach((transaction) => {
       const duplicated = this.hasEqualTransaction(transaction);
@@ -52,6 +62,11 @@ export class AppService {
           },
           uploadId,
         });
+
+        response.invalidOperations.push({
+          ...transaction,
+          motive: InvalidOperationMotiveEnum.DUPLICATED,
+        });
       } else {
         if (transaction.amount < 0) {
           this.registerTransaction({
@@ -63,12 +78,18 @@ export class AppService {
             },
             uploadId,
           });
+
+          response.invalidOperations.push({
+            ...transaction,
+            motive: InvalidOperationMotiveEnum.NEGATIVE,
+          });
         } else {
           this.registerTransaction({
             queryRunner,
             transaction: {
               ...transaction,
               status: TransactionStatusEnum.VALID,
+              warning: transaction.amount > 5000000,
             },
             uploadId,
           });
@@ -82,7 +103,12 @@ export class AppService {
     // only commit if all csv lines are processed
     await queryRunner.commitTransaction();
 
-    return null;
+    response.operations.invalid = response.invalidOperations.length;
+    response.operations.valid = this.transactions.length;
+    response.operations.total =
+      response.operations.invalid + response.operations.valid;
+
+    return response;
   }
 
   private async convertFileToJSON(
@@ -97,11 +123,6 @@ export class AppService {
     });
 
     return finalCSV.data;
-  }
-
-  private validate() {
-    // no negative
-    // no equal transaction
   }
 
   private insertTransaction(transaction: TransactionDto) {

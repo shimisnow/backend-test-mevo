@@ -1,9 +1,8 @@
 import { InvalidOperationMotiveEnum } from 'src/enums/invalid-operation-motive.enum';
 
 export class InvalidOperationsSerializer {
-  id: number;
-  to: number;
-  from: number;
+  to: string;
+  from: string;
   amount: number;
   motive: InvalidOperationMotiveEnum;
 }

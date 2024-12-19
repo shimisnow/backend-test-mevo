@@ -7,5 +7,5 @@ export class UploadFileSerializer {
     invalid: number;
   };
 
-  invalidOperations: InvalidOperationsSerializer;
+  invalidOperations?: Array<InvalidOperationsSerializer>;
 }
