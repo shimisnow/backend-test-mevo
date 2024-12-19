@@ -17,9 +17,11 @@ export class AppService {
   ) {}
 
   async processFile(file: Express.Multer.File): Promise<UploadFileSerializer> {
+    // uploads the file
     const fileData: FileDataSerializer = this.uploadService.uploadFile(file);
 
-    await this.databaseService.registerFile(fileData.folder, fileData.name);
+    // save metadata to database
+    await this.registerFileMetada(fileData.folder, fileData.name);
 
     const data = await this.convertFileToJSON(fileData.path);
 
@@ -27,8 +29,12 @@ export class AppService {
     this.transactions.push(data.shift());
 
     data.forEach((transaction) => {
-      // TODO verify if transaction is duplicated
-      this.insertTransaction(transaction);
+      const duplicated = this.hasEqualTransaction(transaction);
+
+      if (duplicated) {
+      } else {
+        this.insertTransaction(transaction);
+      }
     });
 
     return null;
@@ -68,7 +74,33 @@ export class AppService {
     }
   }
 
-  private searchEqualTransaction() {
-    // binarySearch
+  private hasEqualTransaction(transaction) {
+    // find the first transaction with 'from'
+    const index = this.transactions.findIndex(
+      (t) => t.from == transaction.from,
+    );
+
+    // if none, return
+    if (index === -1) return false;
+
+    for (let i = index; i < this.transactions.length; i++) {
+      // stops the iterator
+      if (this.transactions[i].from != transaction.from) {
+        return false;
+      }
+
+      if (this.transactions[i].to == transaction.to) {
+        if (this.transactions[i].amount == transaction.amount) {
+          return true;
+        }
+      }
+    }
+  }
+
+  private async registerFileMetada(
+    baseDir: string,
+    filename: string,
+  ): Promise<number> {
+    return await this.databaseService.registerFile(baseDir, filename);
   }
 }
