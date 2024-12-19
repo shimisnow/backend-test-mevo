@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { DatabaseService } from './database.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { entities } from './entities';
+import { UploadRepositoryModule } from './repositories/uploads/upload-repository.module';
 
 @Module({
   imports: [
@@ -15,7 +16,9 @@ import { entities } from './entities';
       entities,
       synchronize: true,
     }),
+    UploadRepositoryModule,
   ],
   providers: [DatabaseService],
+  exports: [DatabaseService],
 })
 export class DatabaseModule {}

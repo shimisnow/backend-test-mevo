@@ -1,9 +1,11 @@
 import {
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { TransactionStatusEnum } from '../enums/transaction-status.enum';
 import { TransactionInvalidMotiveEnum } from '../enums/transaction-invalid-motive.enum';
@@ -71,4 +73,18 @@ export class TransactionEntity {
     foreignKeyConstraintName: 'fk_transactions_uploads',
   })
   upload: UploadEntity;
+
+  @CreateDateColumn({
+    name: 'create_at',
+    type: 'timestamp',
+    nullable: true,
+  })
+  createAt?: Date;
+
+  @UpdateDateColumn({
+    name: 'update_at',
+    type: 'timestamp',
+    nullable: true,
+  })
+  updateAt?: Date;
 }

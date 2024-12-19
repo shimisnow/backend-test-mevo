@@ -1,5 +1,5 @@
 export enum UploadStatusEnum {
-  PENDING = 'pendind',
+  PENDING = 'pending',
   PROCESSED = 'processed',
   ERROR = 'error',
 }

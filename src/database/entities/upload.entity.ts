@@ -1,4 +1,10 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { UploadStatusEnum } from '../enums/upload-status.enum';
 
 @Entity({
@@ -24,7 +30,7 @@ export class UploadEntity {
     length: 40,
     nullable: false,
   })
-  from: string;
+  filename: string;
 
   @Column({
     name: 'status',
@@ -35,4 +41,18 @@ export class UploadEntity {
     nullable: false,
   })
   status: UploadStatusEnum;
+
+  @CreateDateColumn({
+    name: 'create_at',
+    type: 'timestamp',
+    nullable: true,
+  })
+  createAt?: Date;
+
+  @UpdateDateColumn({
+    name: 'update_at',
+    type: 'timestamp',
+    nullable: true,
+  })
+  updateAt?: Date;
 }

@@ -5,15 +5,21 @@ import { readFileSync } from 'fs';
 import { parse } from 'papaparse';
 import { UploadService } from './upload/upload.service';
 import { FileDataSerializer } from './serializers/file-data.serializer';
+import { DatabaseService } from './database/database.service';
 
 @Injectable()
 export class AppService {
   private transactions: Array<TransactionDto> = [];
 
-  constructor(private readonly uploadService: UploadService) {}
+  constructor(
+    private readonly uploadService: UploadService,
+    private readonly databaseService: DatabaseService,
+  ) {}
 
   async processFile(file: Express.Multer.File): Promise<UploadFileSerializer> {
     const fileData: FileDataSerializer = this.uploadService.uploadFile(file);
+
+    await this.databaseService.registerFile(fileData.folder, fileData.name);
 
     const data = await this.convertFileToJSON(fileData.path);
 

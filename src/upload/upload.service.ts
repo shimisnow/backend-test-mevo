@@ -28,6 +28,7 @@ export class UploadService {
 
     return {
       path: finalPath,
+      folder: baseFolder,
       name: `${filename}${extension}`,
     };
   }
